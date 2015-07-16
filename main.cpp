@@ -18,7 +18,7 @@ extern "C" {
     #include <libavcodec/avcodec.h>
     #include <libswscale/swscale.h>
     #include <libavformat/avformat.h>
-	#include <libavutil/imgutils.h>
+    #include <libavutil/imgutils.h>
 }
 
 /**
@@ -31,29 +31,29 @@ static const AVCodecID destCodec = AV_CODEC_ID_H264;
 
 int main(int argc, char** argv)
 {
-	/**
-	 * Verify command line arguments
-	 */
-	if (argc != 4) {
-		std::cout << "This tool grabs <numberOfFramesToEncode> frames from <input> and encodes a H.264 video with these at <output>" << std::endl;
-		std::cout << "Usage: " << argv[0] << " <input> <output> <numberOfFramesToEncode>" << std::endl;
-		std::cout << "Sample: " << argv[0] << "sample.mpg sample.out 250" << std::endl;
-		exit(1);
-	}
+    /**
+     * Verify command line arguments
+     */
+    if (argc != 4) {
+        std::cout << "This tool grabs <numberOfFramesToEncode> frames from <input> and encodes a H.264 video with these at <output>" << std::endl;
+        std::cout << "Usage: " << argv[0] << " <input> <output> <numberOfFramesToEncode>" << std::endl;
+        std::cout << "Sample: " << argv[0] << "sample.mpg sample.out 250" << std::endl;
+        exit(1);
+    }
 
-	std::string input(argv[1]), output(argv[2]);
-	uint32_t framesToEncode;
-	std::istringstream(argv[3]) >> framesToEncode;
+    std::string input(argv[1]), output(argv[2]);
+    uint32_t framesToEncode;
+    std::istringstream(argv[3]) >> framesToEncode;
 
-	uint8_t endcode[] = { 0, 0, 1, 0xb7 };
+    uint8_t endcode[] = { 0, 0, 1, 0xb7 };
 
     /**
      * Create cv::Mat
      */
     cv::VideoCapture videoCapturer(input);
     if (videoCapturer.isOpened() == false) {
-    	std::cerr << "Cannot open video at '" << input << "'" << std::endl;
-    	exit(1);
+        std::cerr << "Cannot open video at '" << input << "'" << std::endl;
+        exit(1);
     }
 
     /**
@@ -71,9 +71,9 @@ int main(int argc, char** argv)
      * Be sure we're not asking more frames than there is
      */
     if (framesToEncode > totalFrameCount) {
-    	std::cerr << "You asked for " << framesToEncode << " but there are only " << totalFrameCount
+        std::cerr << "You asked for " << framesToEncode << " but there are only " << totalFrameCount
                   << " frames, will encode as many as there is" << std::endl;
-    	framesToEncode = totalFrameCount;
+        framesToEncode = totalFrameCount;
     }
 
     /**
@@ -89,8 +89,8 @@ int main(int argc, char** argv)
     h264encoderContext->height = height;
 
     if (avcodec_open2(h264encoderContext, h264encoder, NULL) < 0) {
-    	std::cerr << "Cannot open codec, exiting.." << std::endl;
-    	exit(1);
+        std::cerr << "Cannot open codec, exiting.." << std::endl;
+        exit(1);
     }
 
     /**
@@ -104,8 +104,8 @@ int main(int argc, char** argv)
 
     FILE* videoOutFile = fopen(output.c_str(), "wb");
     if (videoOutFile == 0) {
-    	std::cerr << "Cannot open output video file at '" << output << "'" << std::endl;
-    	exit(1);
+        std::cerr << "Cannot open output video file at '" << output << "'" << std::endl;
+        exit(1);
     }
 
     /**
@@ -118,9 +118,9 @@ int main(int argc, char** argv)
      * Convert and encode frames
      */
     for (uint i=0; i < framesToEncode; i++) {
-    	/**
-    	 * Get frame from OpenCV
-    	 */
+        /**
+         * Get frame from OpenCV
+         */
         cv::Mat cvFrame;
         assert(videoCapturer.read(cvFrame) == true);
 
@@ -155,12 +155,12 @@ int main(int argc, char** argv)
         avcodec_encode_video2(h264encoderContext, &avEncodedPacket, destAvFrame, &got_frame);
 
         if (got_frame) {
-        	std::cerr << "Encoded a frame of size " << avEncodedPacket.size << ", writing it.." << std::endl;
+            std::cerr << "Encoded a frame of size " << avEncodedPacket.size << ", writing it.." << std::endl;
 
-        	if (fwrite(avEncodedPacket.data, 1, avEncodedPacket.size, videoOutFile) < (unsigned)avEncodedPacket.size)
-        		std::cerr << "Could not write all " << avEncodedPacket.size << " bytes, but will continue.." << std::endl;
+            if (fwrite(avEncodedPacket.data, 1, avEncodedPacket.size, videoOutFile) < (unsigned)avEncodedPacket.size)
+                std::cerr << "Could not write all " << avEncodedPacket.size << " bytes, but will continue.." << std::endl;
 
-        	fflush(videoOutFile);
+            fflush(videoOutFile);
         }
 
         av_free_packet(&avEncodedPacket);
