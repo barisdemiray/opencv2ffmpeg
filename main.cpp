@@ -142,6 +142,7 @@ int main(int argc, char** argv)
 
         sws_scale(bgr2yuvcontext, sourceAvFrame->data, sourceAvFrame->linesize,
                   0, height, destAvFrame->data, destAvFrame->linesize);
+        sws_freeContext(bgr2yuvcontext);
 
         /**
          * Prepare an AVPacket and set buffer to NULL so that it'll be allocated by FFmpeg
@@ -163,11 +164,24 @@ int main(int argc, char** argv)
             fflush(videoOutFile);
         }
 
+        /**
+         * Per-frame cleanup
+         */
+        av_packet_free_side_data(&avEncodedPacket);
         av_free_packet(&avEncodedPacket);
         av_freep(sourceAvFrame->data);
+        av_frame_free(&sourceAvFrame);
         av_freep(destAvFrame->data);
+        av_frame_free(&destAvFrame);
     }
 
     fwrite(endcode, 1, sizeof(endcode), videoOutFile);
     fclose(videoOutFile);
+
+    /**
+     * Final cleanup
+     */
+    avformat_free_context(cv2avFormatContext);
+    avcodec_close(h264encoderContext);
+    avcodec_free_context(&h264encoderContext);
 }
